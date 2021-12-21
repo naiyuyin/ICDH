@@ -1,6 +1,7 @@
 import numpy as np
 from linear_update_A_B import nll_linear_A_B as nll_linear_old
 from linear_update_A_ab import nll_linear_A_a_b as nll_linear
+import notears
 from notears.linear import notears_linear
 import time
 import utils as ut

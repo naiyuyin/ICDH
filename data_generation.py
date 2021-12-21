@@ -56,21 +56,21 @@ def main(args):
             os.mkdir(data_dir)
             os.mkdir(graph_dir)
 
-    for iter in range(10):
+    for t in range(10):
         if data_type == "hetero":
             X, A, A0, a, b, G = hetero_synthetic_data_generation(d, n, s0 * d, graph_type, A_range, a_range, b_range)
-            np.savetxt(os.path.join(data_dir, f"X_{iter+1}.txt"), X, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"A_{iter+1}.txt"), A, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"A0_{iter + 1}.txt"), A0, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"a_{iter + 1}.txt"), a, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"b_{iter + 1}.txt"), b, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"G_{iter + 1}.txt"), G, delimiter=",")
+            np.savetxt(os.path.join(data_dir, f"X_{t+1}.txt"), X, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"A_{t+1}.txt"), A, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"A0_{t + 1}.txt"), A0, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"a_{t + 1}.txt"), a, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"b_{t + 1}.txt"), b, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"G_{t + 1}.txt"), G, delimiter=",")
 
         elif data_type == "homo":
             X, A, G = homo_synthetic_data_generation(d, n, s0 * d, graph_type, A_range)
-            np.savetxt(os.path.join(data_dir, f"X_{iter + 1}.txt"), X, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"A_{iter + 1}.txt"), A, delimiter=",")
-            np.savetxt(os.path.join(graph_dir, f"G_{iter + 1}.txt"), G, delimiter=",")
+            np.savetxt(os.path.join(data_dir, f"X_{t + 1}.txt"), X, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"A_{t + 1}.txt"), A, delimiter=",")
+            np.savetxt(os.path.join(graph_dir, f"G_{t + 1}.txt"), G, delimiter=",")
 
 
 if __name__ == "__main__":
