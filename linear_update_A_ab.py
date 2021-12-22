@@ -6,7 +6,7 @@ import utils as ut
 
 M = 0
 N = 0
-epsilon = np.exp(-700)
+epsilon = np.exp(-100)
 
 
 def _h(w):
@@ -191,9 +191,10 @@ def nll_linear_A_a_b(X,
     X = X - np.mean(X, axis=0, keepdims=True)
 
     # Initialize parameters and bounds
+    np.random.seed(123)
     A_est = np.random.normal(0, 0.0001, size=(2 * N * N))
     if data_type == "hetero":
-        a_est = np.random.uniform(0.9, 1.0, size=(1, N))
+        a_est = np.random.uniform(0.5, 1.0, size=(1, N))
         b_est = np.random.uniform(0.5, 1.0, size=(1, N))
     elif data_type == "homo":
         a_est = np.ones([1, N])

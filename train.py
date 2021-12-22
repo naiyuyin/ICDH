@@ -42,12 +42,16 @@ def train_synthetic_data(args):
                                                           lamb2=args.lamb_b,
                                                           data_type=data_type,
                                                           verbose=True)
+        # A_nll, B_nll, B0_nll, var_est, nll, rec, t_nll = nll_linear_old(X=X,
+        #                                                                 A_gt=A_gt,
+        #                                                                 lamb=0,
+        #                                                                 verbose=True)
         res[iter, 1] = t_nll
         res[iter, 2] = nll
         res[iter, 3] = rec
         np.savetxt(os.path.join(res_dir, f"A_nll_{iter + 1}.txt"), A_nll, delimiter=",")
-        np.savetxt(os.path.join(res_dir, f"a_nll_{iter + 1}.txt"), a_nll, delimiter=",")
-        np.savetxt(os.path.join(res_dir, f"b_nll_{iter + 1}.txt"), b_nll, delimiter=",")
+        # np.savetxt(os.path.join(res_dir, f"a_nll_{iter + 1}.txt"), a_nll, delimiter=",")
+        # np.savetxt(os.path.join(res_dir, f"b_nll_{iter + 1}.txt"), b_nll, delimiter=",")
 
         G = copy.deepcopy(A_nll)
         G[np.abs(G) <= 0.3] = 0
