@@ -32,7 +32,7 @@ def train_synthetic_notears(args):
         res = np.loadtxt(os.path.join(res_dir, "notears_res.txt"), delimiter=",")
         X = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/data", f"X_{iter + 1}.txt"), delimiter=",")
         X = X[:n, :]
-        A_gt = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/graph", f"A_{iter + 1}.txt"),
+        A_gt = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/graph", f"G_{iter + 1}.txt"),
                           delimiter=",")
 
         np.random.seed(123)

@@ -51,9 +51,16 @@ def train_synthetic_data(args):
         res[iter, 1] = t_nll
         res[iter, 2] = nll
         res[iter, 3] = rec
-        np.savetxt(os.path.join(res_dir, f"A_nll_{iter + 1}.txt"), A_nll, delimiter=",")
-        # np.savetxt(os.path.join(res_dir, f"a_nll_{iter + 1}.txt"), a_nll, delimiter=",")
-        # np.savetxt(os.path.join(res_dir, f"b_nll_{iter + 1}.txt"), b_nll, delimiter=",")
+        if args.formulation == 1:
+            np.savetxt(os.path.join(res_dir, f"A_formulation{args.formulation}_nll_{iter + 1}.txt"), A_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"a_nll_{iter + 1}.txt"), a_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"b_nll_{iter + 1}.txt"), b_nll, delimiter=",")
+        elif args.formulation == 2:
+            np.savetxt(os.path.join(res_dir, f"A_formulation{args.formulation}_nll_{iter+1}.txt"), A_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"B_nll_{iter + 1}.txt"), B_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"B0_nll_{iter + 1}.txt"), B0_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"var_est_{iter + 1}.txt"), var_est, delimiter=",")
+
 
         G = copy.deepcopy(A_nll)
         G[np.abs(G) <= 0.3] = 0
