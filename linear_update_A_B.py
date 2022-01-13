@@ -37,11 +37,11 @@ def _h(W):
     W: weighted adjacency matrix, d*d
     """
     d = W.shape[0]
-    M = np.eye(d) + W * W / d
-    E = np.linalg.matrix_power(M, d - 1)
-    h = (E.T * M).sum() - d
-    # E = slin.expm(W * W)
-    # h = np.trace(E) - d
+    # M = np.eye(d) + W * W / d
+    # E = np.linalg.matrix_power(M, d - 1)
+    # h = (E.T * M).sum() - d
+    E = slin.expm(W * W)
+    h = np.trace(E) - d
     G_h = E.T * W * 2
     return h, G_h
 
@@ -181,6 +181,7 @@ def nll_linear_A_B(X, A_gt, lamb=0, verbose=False):
     A_est = np.random.normal(0, 0.0001, size=(2 * d * d))
     B_est = np.zeros([d,d])
     B0_est = np.zeros([1,d])
+
     # B_est = np.random.normal(0, 1e-16, size=(d,d))
     # B0_est = np.random.normal(0, 1e-16, size=(1,d))
     # rho_A, alpha_A, rho_B, alpha_B, h_A, h_B = 1.0, 0.0, 1.0, 0.0, np.inf, np.inf

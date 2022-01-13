@@ -22,7 +22,7 @@ def train_synthetic_data(args):
     np.random.seed(123)
     data_type = args.data_type
 
-    res_dir = f"results/{data_type}/{graph_type}{s0}_d{d}_n{n}"
+    res_dir = f"results/{data_type}_poly/{graph_type}{s0}_d{d}_n{n}"
     if not os.path.isdir(res_dir):
         os.mkdir(res_dir)
 
@@ -31,9 +31,9 @@ def train_synthetic_data(args):
     for iter in range(10):
         print(f"--------------------------- graph {iter+1} ---------------------------")
         res = np.loadtxt(os.path.join(res_dir, "nll_res.txt"), delimiter=",")
-        X = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/data", f"X_{iter+1}.txt"), delimiter=",")
+        X = np.loadtxt(os.path.join(f"data/{data_type}_poly/{graph_type}{s0}_d{d}/data", f"X_{iter+1}.txt"), delimiter=",")
         X = X[:n, :]
-        A_gt = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/graph", f"A_{iter+1}.txt"), delimiter=",")
+        A_gt = np.loadtxt(os.path.join(f"data/{data_type}_poly/{graph_type}{s0}_d{d}/graph", f"A_{iter+1}.txt"), delimiter=",")
 
         np.random.seed(123)
         ut.set_random_seed(123)
@@ -54,12 +54,12 @@ def train_synthetic_data(args):
         res[iter, 3] = rec
         if args.formulation == 2:
             np.savetxt(os.path.join(res_dir, f"A_formulation{args.formulation}_nll_{iter + 1}.txt"), A_nll, delimiter=",")
-            np.savetxt(os.path.join(res_dir, f"a_nll_{iter + 1}.txt"), a_nll, delimiter=",")
-            np.savetxt(os.path.join(res_dir, f"b_nll_{iter + 1}.txt"), b_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"a_formulation{args.formulation}_nll_{iter + 1}.txt"), a_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"b_formulation{args.formulation}_nll_{iter + 1}.txt"), b_nll, delimiter=",")
         elif args.formulation == 1:
             np.savetxt(os.path.join(res_dir, f"A_formulation{args.formulation}_nll_{iter+1}.txt"), A_nll, delimiter=",")
-            np.savetxt(os.path.join(res_dir, f"B_nll_{iter + 1}.txt"), B_nll, delimiter=",")
-            np.savetxt(os.path.join(res_dir, f"B0_nll_{iter + 1}.txt"), B0_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"B_formulation{args.formulation}_nll_{iter + 1}.txt"), B_nll, delimiter=",")
+            np.savetxt(os.path.join(res_dir, f"B0_formulation{args.formulation}_nll_{iter + 1}.txt"), B0_nll, delimiter=",")
             np.savetxt(os.path.join(res_dir, f"var_est_{iter + 1}.txt"), var_est, delimiter=",")
 
 

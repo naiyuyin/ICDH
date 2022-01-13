@@ -96,7 +96,7 @@ def simulate_linear_sem(W, n, sem_type, noise_scale=None):
         """X: [n, num of parents], w: [num of parents], x: [n]"""
         if sem_type == 'gauss':
             z = np.random.normal(scale=scale, size=n)
-            x = X @ w + z
+            x = np.diag(X @ X.T) * 0.05 + X @ w + z
         elif sem_type == 'exp':
             z = np.random.exponential(scale=scale, size=n)
             x = X @ w + z
@@ -147,7 +147,7 @@ def simulate_linear_neq(W, W_0, B, B_0, n):
     def _simulate_single_equation(X, w, w0, b, b0):
         """X: [n, num of parents], w: [num of parents], x: [n]"""
         X_n = (X - np.mean(X, axis=0)) / np.std(X, axis=0)  # normalize X
-        x = np.random.normal(loc=X @ w + w0, scale=np.sqrt(np.exp(X_n @ b + b0)), size=(n,))
+        x = np.random.normal(loc=np.diag(X @ X.T) * 0.01 + X @ w + w0, scale=np.sqrt(np.exp(X_n @ b + b0)), size=(n,))
         return x
 
     d = W.shape[0]

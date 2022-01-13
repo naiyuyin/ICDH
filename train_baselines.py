@@ -21,7 +21,9 @@ def train_synthetic_notears(args):
     np.random.seed(123)
     data_type = args.data_type
 
-    res_dir = f"results/{data_type}/{graph_type}{s0}_d{d}_n{n}"
+    res_dir = f"results/{data_type}_poly/{graph_type}{s0}_d{d}_n{n}"
+    if not os.path.isdir(f"results/{data_type}_poly"):
+        os.mkdir(f"results/{data_type}_poly")
     if not os.path.isdir(res_dir):
         os.mkdir(res_dir)
 
@@ -30,9 +32,9 @@ def train_synthetic_notears(args):
     for iter in range(10):
         print(f"--------------------------- graph {iter + 1} ---------------------------")
         res = np.loadtxt(os.path.join(res_dir, "notears_res.txt"), delimiter=",")
-        X = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/data", f"X_{iter + 1}.txt"), delimiter=",")
+        X = np.loadtxt(os.path.join(f"data/{data_type}_poly/{graph_type}{s0}_d{d}/data", f"X_{iter + 1}.txt"), delimiter=",")
         X = X[:n, :]
-        A_gt = np.loadtxt(os.path.join(f"data/{data_type}/{graph_type}{s0}_d{d}/graph", f"G_{iter + 1}.txt"),
+        A_gt = np.loadtxt(os.path.join(f"data/{data_type}_poly/{graph_type}{s0}_d{d}/graph", f"G_{iter + 1}.txt"),
                           delimiter=",")
 
         ut.set_random_seed(123)
