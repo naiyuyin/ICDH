@@ -179,11 +179,11 @@ def nll_linear_A_B(X, A_gt, lamb=0, verbose=False):
 
     # Initialize parameters and bounds
     A_est = np.random.normal(0, 0.0001, size=(2 * d * d))
-    B_est = np.zeros([d,d])
-    B0_est = np.zeros([1,d])
+    # B_est = np.zeros([d,d])
+    # B0_est = np.zeros([1,d])
 
-    # B_est = np.random.normal(0, 1e-16, size=(d,d))
-    # B0_est = np.random.normal(0, 1e-16, size=(1,d))
+    B_est = np.random.normal(0, 1e-16, size=(d,d))
+    B0_est = np.random.normal(0, 1e-16, size=(1,d))
     # rho_A, alpha_A, rho_B, alpha_B, h_A, h_B = 1.0, 0.0, 1.0, 0.0, np.inf, np.inf
     params_est = np.concatenate((A_est, B_est, B0_est), axis=None)
     bnds = [(0, 0) if i == j else (0, None) for _ in range(2) for i in range(d) for j in range(d)] + [(0, 0) if i == j else (None, None) for i in range(d) for j in range(d)] + [(None, None) for i in range(d)]
@@ -213,7 +213,7 @@ def nll_linear_A_B(X, A_gt, lamb=0, verbose=False):
         if verbose:
             print(f"Iteration {iteration} loss: {losses[-1]: .4f}, previous loss: {losses[-2]: .4f}, difference of the losses: {losses[-2] - losses[-1]: .4f}.")
         iteration += 1
-        if losses[-2] - losses[-1] < 1:
+        if losses[-2] - losses[-1] < 1e-1:
             if verbose:
                 print("Reach convergence. Stop the iterative approach and return final estimation.")
             break

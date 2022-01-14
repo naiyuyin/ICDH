@@ -16,11 +16,11 @@ def _h(w):
     Input: w is the weighted adjacency matrix
     Output: h value. h(w) = 0 => w is a DAG
     """
-    m = np.eye(N) + w * w / N
-    e = np.linalg.matrix_power(m, N - 1)
-    h = (e.T * m).sum() - N
-    # e = slin.expm(w * w)
-    # h = np.trace(e) - N
+    # m = np.eye(N) + w * w / N
+    # e = np.linalg.matrix_power(m, N - 1)
+    # h = (e.T * m).sum() - N
+    e = slin.expm(w * w)
+    h = np.trace(e) - N
     g_h = e.T * w * 2
     return h, g_h
 
@@ -237,8 +237,8 @@ def nll_linear_A_a_b(X,
             print(" Step 2: Update variance parameter a, b")
         params_new = update_a_b(X=X, params_est=params_new, bnds=bnds, lamb1=lamb1, lamb2=lamb2)
         A_new, a_new, b_new = params2Aab(params_new)
-        print(a_new)
-        print(b_new)
+        # print(a_new)
+        # print(b_new)
         losses.append(nll_expected(X, A_new, a_new, b_new))
         if verbose:
             G = copy.deepcopy(A_new)
@@ -248,7 +248,7 @@ def nll_linear_A_a_b(X,
             print(f"SHD after update B is {SHD}")
             print(f"Iteration {iteration} loss: {losses[-1]: .4f}\nIteration {iteration-1} loss: {losses[-2]: .4f}\tDecrease of the nll losses: {losses[-2] - losses[-1]:.4f}")
         iteration += 1
-        if losses[-2] - losses[-1] < 1e-3:
+        if losses[-2] - losses[-1] < 1e-5:
             if verbose:
                 print("Reach convergence. Stop the iterative approach and return final estimation.")
             break
