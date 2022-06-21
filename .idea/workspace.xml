@@ -5,36 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a5d479e-dd1d-4ce2-a035-9ac8e514e5b1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/trace_expm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_1.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_10.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_10.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_2.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_3.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_3.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_4.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_4.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_5.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_5.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_6.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_6.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_7.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_7.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_8.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_8.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_9.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_nll_9.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_1.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_10.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_10.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_2.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_2.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_3.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_3.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_4.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_4.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_5.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_5.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_6.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_6.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_7.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_7.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_8.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_8.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_9.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/A_notears_9.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/nll_res.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/nll_res.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/notears_res.txt" beforeDir="false" afterPath="$PROJECT_DIR$/results/hetero/ER2_d10_n1000/notears_res.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_baselines.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_baselines.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Nonlinear_update.py" beforeDir="false" afterPath="$PROJECT_DIR$/Nonlinear_update.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -47,35 +32,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/train.py" />
-    <property name="node.js.detected.package.eslint" value="true" />
-    <property name="node.js.detected.package.tslint" value="true" />
-    <property name="node.js.path.for.package.eslint" value="project" />
-    <property name="node.js.path.for.package.tslint" value="project" />
-    <property name="node.js.selected.package.eslint" value="(autodetect)" />
-    <property name="node.js.selected.package.tslint" value="(autodetect)" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/Users/naiyuyin/Desktop/DAG_learning_under_heteroscedastic_variance/causal_discovery_heteroscedastic_data",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+  }
+}]]></component>
   <component name="RunManager">
-    <configuration name="train_our_old" type="PythonConfigurationType" factoryName="Python">
+    <configuration name="train_nonlinear" type="PythonConfigurationType" factoryName="Python">
+      <module name="causal_discovery_heteroscedastic_data" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="$USER_HOME$/anaconda3/envs/ibm/bin/python" />
+      <option name="SDK_HOME" value="/opt/anaconda3/envs/nllSEM/bin/python" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train.py" />
-      <option name="PARAMETERS" value="--data_type hetero --num_size 10 --graph_type ER --s0 2 --formulation 2" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Nonlinear_update.py" />
+      <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -93,6 +75,7 @@
       <option name="presentableId" value="Default" />
       <updated>1640107258676</updated>
       <workItem from="1640141527458" duration="1652000" />
+      <workItem from="1655831373732" duration="4774000" />
     </task>
     <servers />
   </component>
