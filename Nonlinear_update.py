@@ -15,20 +15,20 @@ class MLP(nn.Module):
         self.dims = dims
 
         # First layer weights, W1 -> W1+, W1-
-        self.W1_pos = nn.Linear(d, d*dims[1], bias=bias)
-        self.W1_neg = nn.linear(d, d*dims[1], bias=bias)
+        self.W1_pos = nn.Linear(d, d * dims[1], bias=bias)
+        self.W1_neg = nn.linear(d, d * dims[1], bias=bias)
         self.W1_pos.weight.bounds = self._bounds()
         self.W1_neg.weight.bounds = self._bounds()
 
         # Second layer weights for mean estimation W2
-        self.W2 = nn.Linear(d*dims[1], d, bias=bias)
+        self.W2 = nn.Linear(d * dims[1], d, bias=bias)
 
         # Second layer weights for variance estimate W3
-        self.W3 = nn.Linear(d*dims[1], d, bias=bias)
+        self.W3 = nn.Linear(d * dims[1], d, bias=bias)
 
     def _bounds(self):
         d = self.dims[0]
-        bounds =  []
+        bounds = []
         for j in range(d):
             for m in range(self.dims[1]):
                 for i in range(d):
@@ -40,12 +40,12 @@ class MLP(nn.Module):
         return bounds
 
     def forward(self, x):
-        x = self.W1_pos(x) - self.W1_neg(x) # [n, d * m1]
+        x = self.W1_pos(x) - self.W1_neg(x)  # [n, d * m1]
         # x = x.view(-1, self.dims[0], self.dims[1]) # [n, d, m1]
         x = torch.sigmoid(x)
-        mu = self.W2(x) # [n, d]
+        mu = self.W2(x)  # [n, d]
         # var = torch.relu(self.W3(x))
-        var = torch.exp(self.W3(x)) # [n, d]
+        var = torch.exp(self.W3(x))  # [n, d]
         # var = torch.exp(torch.sigmoid(self.W3(x)))
         # var = nn.Softplus(self.W3(x))
         return mu, var
@@ -79,26 +79,69 @@ def negative_log_likelihood_loss(mu, var, target):
     return nll_loss
 
 
-def E_step(model, X):
-    return model
+def E_step(model: nn.Module,
+           x: torch.tensor):
+    model.W1_pos.require_grad = False
+    model.W1_neg.require_grad = False
+    model.W2.require_grad = False
+    optimizer = LBFGSBScipy(model.parameters())
+
+    def closure():
+        optimizer.zero_grad()
+        x_hat, var = model(x)
+        loss = negative_log_likelihood_loss(x_hat, var, x)
+        loss.backward()
+        return loss
+
+    optimizer.step(closure)
+    # return model
+
+
+def dual_ascent_step(model, x, var, rho, alpha, h, rho_max):
+    h_new = None
+    optimizer = LBFGSBScipy(model.parameters())  # check if they take no_grade
+    while rho < rho_max:
+        def closure():
+            optimizer.zero_grad()
+            x_hat, _ = model(x)
+            loss = negative_log_likelihood_loss(x_hat, var, x)
+            h_val = model.h_func()
+            penalty = 0.5 * rho * h_val * h_val + alpha * h_val
+            obj = loss + penalty
+            obj.backward()
+            return obj
+
+        optimizer.step(closure)
+        with torch.no_grad():
+            h_new = model.h_func().item()
+        if h_new > 0.25 * h:
+            rho *= 10
+        else:
+            break
+    alpha += rho * h_new
+    return rho, alpha, h_new
 
 
 def M_step(model: nn.Module,
-           X: np.ndarray,
+           X: torch.tensor,
+           var: torch.tensor,
            max_iter: int = 100,
            h_tol: float = 1e-8,
            rho_max: float = 1e+16):
+    model.W3.require_grad = False
     rho, alpha, h = 1.0, 0.0, np.inf
     for _ in range(max_iter):
         rho, alpha, h = dual_ascent_step(model, X, rho, alpha, h, rho_max)
         if h <= h_tol or rho >= rho_max:
             break
-    return model
+    # return model
 
 
 def Nonlinear_update(model: nn.Module,
                      X: np.ndarray,
                      w_threshold: float = 0.3):
+    X_torch = torch.from_numpy(X)
+    
     W_est = model.fc1_to_adj()
     W_est[np.abs(W_est) < w_threshold] = 0
     return A_est
@@ -120,12 +163,9 @@ def main():
     A_est = Nonlinear_update(model, X)
     assert ut.is_dag(A_est)
     np.savetxt('W_est.csv', A_est, delimiter=',')
-    SHD, _, _, _ = ut.count_accuracy(B_true, A_est !=0)
+    SHD, _, _, _ = ut.count_accuracy(B_true, A_est != 0)
     print(SHD)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
-
-
-
