@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import expit as sigmoid
-import igraph as ig
+# import igraph as ig
 import random
 import copy
 
