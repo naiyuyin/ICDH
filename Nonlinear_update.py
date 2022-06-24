@@ -99,7 +99,7 @@ def E_step(model: nn.Module,
 
 def dual_ascent_step(model, x, var, rho, alpha, h, rho_max):
     h_new = None
-    optimizer = LBFGSBScipy(model.parameters())  # check if they take no_grade
+    optimizer = LBFGSBScipy(model.parameters())  # check if they take no_grad
     while rho < rho_max:
         def closure():
             optimizer.zero_grad()
@@ -131,7 +131,7 @@ def M_step(model: nn.Module,
     model.W3.require_grad = False
     rho, alpha, h = 1.0, 0.0, np.inf
     for _ in range(max_iter):
-        rho, alpha, h = dual_ascent_step(model, X, rho, alpha, h, rho_max)
+        rho, alpha, h = dual_ascent_step(model, X, var, rho, alpha, h, rho_max)
         if h <= h_tol or rho >= rho_max:
             break
     # return model
@@ -139,9 +139,37 @@ def M_step(model: nn.Module,
 
 def Nonlinear_update(model: nn.Module,
                      X: np.ndarray,
-                     w_threshold: float = 0.3):
+                     W_true: np.ndarray,
+                     w_threshold: float = 0.3,
+                     verbose: bool = True):
     X_torch = torch.from_numpy(X)
-    
+    n, d = X_torch.shape
+    nlls = []
+
+    # initial variance and W1, W2
+    var_init = torch.zeros([n, d])
+    M_step(model, X_torch, var_init)
+    with torch.no_grad():
+        X_hat, _ = model(X_torch)
+        h_val = model.h_func().item()
+        nll = negative_log_likelihood_loss(X_hat, var_init, X_torch).item()
+        if verbose:
+            W_init = model.fc1_to_adj()
+            W_init[np.abs(W_init) < w_threshold] = 0
+            SHD, extra, missing, reverse = ut.count_accuracy(W_true, W_init != 0)
+            print(f'After initialization: NLL loss: {nll: .4f}, h value: {h_val: .4f}, SHD: ({SHD}, {extra}, {missing}, {reverse})')
+        nlls.append(nll)
+
+    # EM-updating
+    while True:
+        # E step
+        E_step(model, X_torch)
+        with torch.no_grad():
+            _, var_est = model(X_torch)
+        # M step
+        M_step(model, X_torch, var_est)
+
+
     W_est = model.fc1_to_adj()
     W_est[np.abs(W_est) < w_threshold] = 0
     return A_est
