@@ -6,8 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="3a5d479e-dd1d-4ce2-a035-9ac8e514e5b1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/Untitled-checkpoint.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Nonlinear_update.py" beforeDir="false" afterPath="$PROJECT_DIR$/Nonlinear_update.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +74,7 @@
       <option name="presentableId" value="Default" />
       <updated>1640107258676</updated>
       <workItem from="1640141527458" duration="1652000" />
-      <workItem from="1655831373732" duration="13040000" />
+      <workItem from="1655831373732" duration="17004000" />
     </task>
     <servers />
   </component>

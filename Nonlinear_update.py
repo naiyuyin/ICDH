@@ -69,21 +69,21 @@ class MLP(nn.Module):
         W1 = W1.view(d, -1, d)
         A = torch.sum(W1 * W1, dim=1).t()
         W = torch.sqrt(A)
-        W = W.cpu().detach().num()
+        W = W.cpu().detach().numpy()
         return W
 
 
 def negative_log_likelihood_loss(mu, var, target):
     R = target - mu
-    nll_loss = 0.5 * torch.sum(torch.log(2 * np.pi * var) + R ** 2 / var)
-    return nll_loss
+    return 0.5 * torch.sum(torch.log(2 * np.pi * var) + R ** 2 / var)
 
 
 def E_step(model: nn.Module,
            x: torch.tensor):
-    model.W1_pos.require_grad = False
-    model.W1_neg.require_grad = False
-    model.W2.require_grad = False
+    model.W1_pos.requires_grad = False
+    model.W1_neg.requires_grad = False
+    model.W2.requires_grad = False
+    model.W3.requires_grad = True
     optimizer = LBFGSBScipy(model.parameters())
 
     def closure():
@@ -128,7 +128,10 @@ def M_step(model: nn.Module,
            max_iter: int = 100,
            h_tol: float = 1e-8,
            rho_max: float = 1e+16):
-    model.W3.require_grad = False
+    model.W1_pos.requires_grad = True
+    model.W1_neg.requires_grad = True
+    model.W2.requires_grad = True
+    model.W3.requires_grad = False
     rho, alpha, h = 1.0, 0.0, np.inf
     for _ in range(max_iter):
         rho, alpha, h = dual_ascent_step(model, X, var, rho, alpha, h, rho_max)
@@ -149,30 +152,41 @@ def Nonlinear_update(model: nn.Module,
     # initial variance and W1, W2
     var_init = torch.zeros([n, d])
     M_step(model, X_torch, var_init)
+    E_step(model, X_torch)
     with torch.no_grad():
-        X_hat, _ = model(X_torch)
-        h_val = model.h_func().item()
-        nll = negative_log_likelihood_loss(X_hat, var_init, X_torch).item()
+        x_hat, var_est = model(X_torch)
+        nll = negative_log_likelihood_loss(x_hat, var_est, X_torch).item()
         if verbose:
-            W_init = model.fc1_to_adj()
-            W_init[np.abs(W_init) < w_threshold] = 0
-            SHD, extra, missing, reverse = ut.count_accuracy(W_true, W_init != 0)
-            print(f'After initialization: NLL loss: {nll: .4f}, h value: {h_val: .4f}, SHD: ({SHD}, {extra}, {missing}, {reverse})')
+            w_temp = model.fc1_to_adj()
+            w_temp[np.abs(w_temp) < w_threshold] = 0
+            SHD, extra, missing, reverse = ut.count_accuracy(W_true, w_temp != 0)
+            print(f'After initialization: NLL loss: {nll: .4f}, SHD: ({SHD}, {extra}, {missing}, {reverse})')
         nlls.append(nll)
+    w_est = model.fc1_to_adj()
 
     # EM-updating
     while True:
+        # M step
+        M_step(model, X_torch, var_est)
         # E step
         E_step(model, X_torch)
         with torch.no_grad():
-            _, var_est = model(X_torch)
-        # M step
-        M_step(model, X_torch, var_est)
+            x_hat, var_est = model(X_torch)
+            nll = negative_log_likelihood_loss(x_hat, var_est, X_torch).item()
+            if verbose:
+                w_temp = model.fc1_to_adj()
+                w_temp[np.abs(w_temp) < w_threshold] = 0
+                SHD, extra, missing, reverse = ut.count_accuracy(W_true, w_temp != 0)
+                print(f'After initialization: NLL loss: {nll: .4f}, SHD: ({SHD}, {extra}, {missing}, {reverse})')
 
+        if nlls[-1] - nll < 1e-1:
+            break
+        else:
+            nlls.append(nll)
+            w_est = model.fc1_to_adj()
 
-    W_est = model.fc1_to_adj()
-    W_est[np.abs(W_est) < w_threshold] = 0
-    return A_est
+    w_est[np.abs(w_est) < w_threshold] = 0
+    return w_est, nlls
 
 
 def main():
