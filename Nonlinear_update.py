@@ -195,7 +195,7 @@ def main():
 
     # generate synthetic data
     ut.set_random_seed(123)
-    n, d, s0, graph_type, sem_type = 200, 5, 9, 'ER', 'mlp'
+    n, d, s0, graph_type, sem_type = 1000, 5, 9, 'ER', 'mlp'
     B_true = ut.simulate_dag(d, s0, graph_type)
     np.save('W_true.csv', B_true, delimiter=',')
     X = ut.simulate_nonlinear_sem(B_true, n, sem_type)
