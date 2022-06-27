@@ -3,12 +3,13 @@ import torch
 import torch.nn as nn
 from lbfgsb_scipy import LBFGSBScipy
 from trace_expm import trace_expm
+from locally_connected import LocallyConnected
 import utils as ut
 
 
 class MLP(nn.Module):
     def __init__(self, dims, bias=False):
-        super(MLP, self).__init()
+        super(MLP, self).__init__()
         assert len(dims) >= 2
         assert dims[-1] == 1
         d = dims[0]
@@ -16,15 +17,17 @@ class MLP(nn.Module):
 
         # First layer weights, W1 -> W1+, W1-
         self.W1_pos = nn.Linear(d, d * dims[1], bias=bias)
-        self.W1_neg = nn.linear(d, d * dims[1], bias=bias)
+        self.W1_neg = nn.Linear(d, d * dims[1], bias=bias)
         self.W1_pos.weight.bounds = self._bounds()
         self.W1_neg.weight.bounds = self._bounds()
 
         # Second layer weights for mean estimation W2
-        self.W2 = nn.Linear(d * dims[1], d, bias=bias)
+        self.W2 = LocallyConnected(d, dims[1], 1, bias=bias)
+        self.W2.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1))
 
         # Second layer weights for variance estimate W3
-        self.W3 = nn.Linear(d * dims[1], d, bias=bias)
+        self.W3 = LocallyConnected(d, dims[1], 1, bias=bias)
+        self.W3.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1))
         self.acfun = nn.Softplus()
 
     def _bounds(self):
@@ -42,11 +45,13 @@ class MLP(nn.Module):
 
     def forward(self, x):
         x = self.W1_pos(x) - self.W1_neg(x)  # [n, d * m1]
-        # x = x.view(-1, self.dims[0], self.dims[1]) # [n, d, m1]
-        x = torch.sigmoid(x)
-        mu = self.W2(x)  # [n, d]
-        # var = torch.relu(self.W3(x))
-        var = torch.exp(self.W3(x))  # [n, d]
+        x = x.view(-1, self.dims[0], self.dims[1]) # [n, d, m1]
+        x = torch.sigmoid(x) # [n, d, m1]
+        mu = self.W2(x) # [n, d, m2 = 1]
+        mu = mu.squeeze(dim=2)  # [n, d]
+
+        var = torch.exp(self.W3(x))  # [n, d, m2 = 1]
+        var = var.squeeze(dim=2) # [n, d]
         # var = torch.exp(torch.sigmoid(self.W3(x)))
         # var = self.acfun(self.W3(x))
         return mu, var
@@ -79,6 +84,12 @@ def negative_log_likelihood_loss(mu, var, target):
     return 0.5 * torch.sum(torch.log(2 * np.pi * var) + R ** 2 / var)
 
 
+def squared_loss(output, target):
+    n = target.shape[0]
+    loss = 0.5 / n * torch.sum((output - target) ** 2)
+    return loss
+
+
 def E_step(model: nn.Module,
            x: torch.tensor):
     model.W1_pos.weight.requires_grad = False
@@ -95,6 +106,10 @@ def E_step(model: nn.Module,
         return loss
 
     optimizer.step(closure)
+    with torch.no_grad():
+        x_hat, var = model(x)
+        loss = negative_log_likelihood_loss(x_hat, var, x).item()
+        print(f'NLL loss: {loss: .4f}.')
     # return model
 
 
@@ -106,6 +121,7 @@ def dual_ascent_step(model, x, var, rho, alpha, h, rho_max):
             optimizer.zero_grad()
             x_hat, _ = model(x)
             loss = negative_log_likelihood_loss(x_hat, var, x)
+            # loss = squared_loss(x_hat, x)
             h_val = model.h_func()
             penalty = 0.5 * rho * h_val * h_val + alpha * h_val
             obj = loss + penalty
@@ -195,18 +211,29 @@ def main():
     np.set_printoptions(precision=3)
 
     # generate synthetic data
-    ut.set_random_seed(123)
-    n, d, s0, graph_type, sem_type = 1000, 5, 9, 'ER', 'mlp'
-    B_true = ut.simulate_dag(d, s0, graph_type)
-    np.save('W_true.csv', B_true, delimiter=',')
-    X = ut.simulate_nonlinear_sem(B_true, n, sem_type)
-    np.save('X.csv', X, delimiter=',')
+    # ut.set_random_seed(123)
+    # n, d, s0, graph_type, sem_type = 1000, 5, 9, 'ER', 'mlp'
+    # B_true = ut.simulate_dag(d, s0, graph_type)
+    # np.savetxt('W_true.csv', B_true, delimiter=',')
+    # X = ut.simulate_nonlinear_sem(B_true, n, sem_type)
+    # np.savetxt('X.csv', X, delimiter=',')
+
+    # load data
+    X = np.loadtxt('X.csv', delimiter=',')
+    W_true = np.loadtxt('W_true.csv', delimiter=',')
+    n, d = X.shape
 
     model = MLP(dims=[d, 10, 1], bias=False)
-    A_est = Nonlinear_update(model, X)
+    # M_step(model, torch.from_numpy(X), torch.ones([n, d]))
+    # torch.save({'model_state_dict': model.state_dict()}, 'model_init.pt')
+    checkpoint = torch.load('model_init.pt')
+    model.load_state_dict(checkpoint['model_state_dict'])
+
+    E_step(model, torch.from_numpy(X))
+    A_est = model.fc1_to_adj()
+    A_est[A_est < 0.3] = 0
     assert ut.is_dag(A_est)
-    np.savetxt('W_est.csv', A_est, delimiter=',')
-    SHD, _, _, _ = ut.count_accuracy(B_true, A_est != 0)
+    SHD, _, _, _ = ut.count_accuracy(W_true, A_est != 0)
     print(SHD)
 
 
