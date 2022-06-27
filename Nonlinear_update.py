@@ -25,6 +25,7 @@ class MLP(nn.Module):
 
         # Second layer weights for variance estimate W3
         self.W3 = nn.Linear(d * dims[1], d, bias=bias)
+        self.acfun = nn.Softplus()
 
     def _bounds(self):
         d = self.dims[0]
@@ -47,7 +48,7 @@ class MLP(nn.Module):
         # var = torch.relu(self.W3(x))
         var = torch.exp(self.W3(x))  # [n, d]
         # var = torch.exp(torch.sigmoid(self.W3(x)))
-        # var = nn.Softplus(self.W3(x))
+        # var = self.acfun(self.W3(x))
         return mu, var
 
     def h_func(self):
@@ -80,10 +81,10 @@ def negative_log_likelihood_loss(mu, var, target):
 
 def E_step(model: nn.Module,
            x: torch.tensor):
-    model.W1_pos.requires_grad = False
-    model.W1_neg.requires_grad = False
-    model.W2.requires_grad = False
-    model.W3.requires_grad = True
+    model.W1_pos.weight.requires_grad = False
+    model.W1_neg.weight.requires_grad = False
+    model.W2.weight.requires_grad = False
+    model.W3.weight.requires_grad = True
     optimizer = LBFGSBScipy(model.parameters())
 
     def closure():
@@ -128,10 +129,10 @@ def M_step(model: nn.Module,
            max_iter: int = 100,
            h_tol: float = 1e-8,
            rho_max: float = 1e+16):
-    model.W1_pos.requires_grad = True
-    model.W1_neg.requires_grad = True
-    model.W2.requires_grad = True
-    model.W3.requires_grad = False
+    model.W1_pos.weight.requires_grad = True
+    model.W1_neg.weight.requires_grad = True
+    model.W2.weight.requires_grad = True
+    model.W3.weight.requires_grad = False
     rho, alpha, h = 1.0, 0.0, np.inf
     for _ in range(max_iter):
         rho, alpha, h = dual_ascent_step(model, X, var, rho, alpha, h, rho_max)
