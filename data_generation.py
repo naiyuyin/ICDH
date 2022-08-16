@@ -119,8 +119,8 @@ if __name__ == "__main__":
     # parameters to generate graphs
     parser.add_argument('--graph_type', type=str, default='ER',
                         choices=['ER', 'SF'])
-    parser.add_argument('--s0', type=int, default=2, help="degree of variables")
-    parser.add_argument('--num_size', type=int, default=10,
+    parser.add_argument('--s0', type=int, default=1, help="degree of variables")
+    parser.add_argument('--num_size', type=int, default=5,
                         help="variable size to be generated")
     # parameters to generate data
     parser.add_argument('--data_type', type=str, default='hetero_old', choices=['homo', 'hetero_old', 'hetero', 'hetero_new2'],

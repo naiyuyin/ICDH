@@ -79,10 +79,10 @@ def update_A(X, X_n, params_est, bnds, c=0.25, s=10, lamb=0, h_tol=1e-8, rho_max
 
         # Compute graident of A,B,B0, since only updates A, gradients of B and B0 should be 0.
         G_loss_A = - X.T @ (R / var) / n
-        # G_loss_B =  0.5 * (X.T @ (1 - R ** 2 / var))
-        # G_loss_B0 = 0.5 * (1 - R ** 2 / var).sum(axis=0)
-        G_loss_B = np.zeros([d, d])
-        G_loss_B0 = np.zeros([d, ])
+        G_loss_B = 0.5 / n * (X_n.T @ (1 - R ** 2 / var)) + lamb * X_n.T @ var
+        G_loss_B0 = 0.5 / n * (1 - R ** 2 / var).sum(axis=0) + lamb * np.sum(var, axis=0)
+        # G_loss_B = np.zeros([d, d])
+        # G_loss_B0 = np.zeros([d, ])
 
         # back-propagate DAG constraint on gradient of A
         G_loss_A = G_loss_A + (rho_A * h_A + alpha_A) * G_h_A
@@ -161,7 +161,7 @@ def update_B(X, X_n, params_est, bnds, c = 0.25, s = 10, lamb=0, h_tol = 1e-8, r
     return params_est
 
 
-def nll_linear_A_B(X, A_gt, lamb=0, verbose=False):
+def nll_linear_AB(X, A_gt, lamb=0, verbose=False):
     """
     a two-phrase iterative DAG learning approach
     X: input, n*d
@@ -188,40 +188,22 @@ def nll_linear_A_B(X, A_gt, lamb=0, verbose=False):
     params_est = np.concatenate((A_est, B_est, B0_est), axis=None)
     bnds = [(0, 0) if i == j else (0, None) for _ in range(2) for i in range(d) for j in range(d)] + [(0, 0) if i == j else (None, None) for i in range(d) for j in range(d)] + [(None, None) for i in range(d)]
     losses = [0.5 * (np.log(2 * np.pi * np.exp(X_n @ B_est + B0_est)) + (X - X @ (A_est[:d*d] - A_est[d*d:]).reshape(d,d)) ** 2 / np.exp(X_n @ B_est + B0_est)).sum()]    # Augmented Lagrangian Method
-    while True:
-        if verbose:
-            print(f"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Iteration {iteration} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-            print("update A")
-        params_new = update_A(X=X, X_n=X_n, params_est=params_est, bnds=bnds, c=c, s=s, lamb=lamb)
-        if verbose:
-            A_new, B_new, B0_new = params2AB(params_new, d)
-            G = copy.deepcopy(A_new)
-            G[np.abs(G) < 0.3] = 0
-            # G = (G != 0).astype("int")
-            SHD, _, _, _ = ut.count_accuracy(A_gt, G != 0)
-            print(f"SHD after update A is {SHD}")
-            print("update B, B0")
-        params_new = update_B(X=X, X_n=X_n, params_est=params_new, bnds=bnds, c=c, s=s, lamb=lamb)
-        A_new, B_new, B0_new = (params_new[:d * d] - params_new[d * d: 2 * d * d]).reshape([d, d]), params_new[2 * d * d:3 * d * d].reshape([d, d]), params_new[3 * d * d:].reshape([1, d])
-        if verbose:
-            G = copy.deepcopy(A_new)
-            G[np.abs(G) <= 0.3] = 0
-            G = (G != 0).astype("int")
-            SHD, _, _, _ = ut.count_accuracy(A_gt, G != 0)
-            print(f"SHD after update B, B0 is {SHD}")
-        losses.append(0.5 * (np.log(2 * np.pi * np.exp(X_n @ B_new + B0_new)) + ( X - X @ A_new) ** 2 / np.exp(X_n @ B_new + B0_new)).sum())
-        if verbose:
-            print(f"Iteration {iteration} loss: {losses[-1]: .4f}, previous loss: {losses[-2]: .4f}, difference of the losses: {losses[-2] - losses[-1]: .4f}.")
-        iteration += 1
-        if losses[-2] - losses[-1] < 1:
-            if verbose:
-                print("Reach convergence. Stop the iterative approach and return final estimation.")
-            break
-        else:
-            if verbose:
-                print("Go into the next iteration.")
-            params_est, A_est, B_est, B0_est = params_new, A_new, B_new, B0_new
+
+
+    print(f"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Iteration {iteration} %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    print("update A")
+    params_new = update_A(X=X, X_n=X_n, params_est=params_est, bnds=bnds, c=c, s=s, lamb=lamb)
+    if verbose:
+        A_est, B_est, B0_est = params2AB(params_new, d)
+        G = copy.deepcopy(A_est)
+        G[np.abs(G) < 0.3] = 0
+        SHD, _, _, _ = ut.count_accuracy(A_gt, G != 0)
+        print(f"SHD after update A is {SHD}")
+        print("update B, B0")
+
     end_time = time.time()
     var_est = np.exp(X_n @ B_est + B0_est)
-    rec_loss = 0.5  / n * ((X - X @ A_est) ** 2).sum()
-    return A_est, B_est, B0_est, var_est, losses[-2], rec_loss, end_time - start_time
+    R_est = X - X @ A_est
+    nll_loss = 0.5 * (np.log(2 * np.pi * var_est) + R_est ** 2 / var_est).sum()
+    rec_loss = 0.5 / n * ((X - X @ A_est) ** 2).sum()
+    return A_est, B_est, B0_est, var_est, nll_loss, rec_loss, end_time - start_time
