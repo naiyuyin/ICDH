@@ -8,7 +8,7 @@ from Nonlinear_update import Nonlinear_update
 import utils as ut
 import time as t
 import argparse
-# import os
+import os
 # os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def main_our(args):
@@ -38,8 +38,8 @@ def main_our(args):
 
         # notears nonlinear
         start_time = t.time()
-        model = MLP(dims=[d, 10, 1], bias=True).to(device=device)
-        W_est = Nonlinear_update(model=model, X=X, lamb1=args.lamb1, lamb2=args.lamb2, device=device, W_true=W_true) # no l1 and l2 constraint version
+        model = MLP(dims=[d, 10, 1], device=device, bias=True).to(device=device)
+        W_est, _ = Nonlinear_update(model=model, X=X, lamb1=args.lamb1, lamb2=args.lamb2, device=device, W_true=W_true) # no l1 and l2 constraint version
         end_time = t.time()
         time = end_time - start_time
         np.savetxt(res_path + f'/W_nll_{s+1}.csv', W_est, delimiter=',')

@@ -7,10 +7,11 @@ from locally_connected import LocallyConnected
 import utils as ut
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+import pdb
 
 
 class MLP(nn.Module):
-    def __init__(self, dims, bias=False):
+    def __init__(self, dims, device, bias=False):
         super(MLP, self).__init__()
         assert len(dims) >= 2
         assert dims[-1] == 1
@@ -18,18 +19,20 @@ class MLP(nn.Module):
         self.dims = dims
 
         # First layer weights, W1 -> W1+, W1-
-        self.W1_pos = nn.Linear(d, d * dims[1], bias=bias)
-        self.W1_neg = nn.Linear(d, d * dims[1], bias=bias)
+        self.W1_pos = nn.Linear(d, d * dims[1], bias=bias).to(device)
+        self.W1_neg = nn.Linear(d, d * dims[1], bias=bias).to(device)
+        # pdb.set_trace()
         self.W1_pos.weight.bounds = self._bounds()
         self.W1_neg.weight.bounds = self._bounds()
+        # pdb.set_trace()
 
         # Second layer weights for mean estimation W2
-        self.W2 = LocallyConnected(d, dims[1], 1, bias=bias)
-        self.W2.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1))
+        self.W2 = LocallyConnected(d, dims[1], 1, bias=bias).to(device)
+        self.W2.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1)).to(device)
 
         # Second layer weights for variance estimate W3
-        self.W3 = LocallyConnected(d, dims[1], 1, bias=bias)
-        self.W3.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1))
+        self.W3 = LocallyConnected(d, dims[1], 1, bias=bias).to(device)
+        self.W3.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1)).to(device)
         self.acfun = nn.Softplus()
 
     def _bounds(self):
@@ -46,6 +49,7 @@ class MLP(nn.Module):
         return bounds
 
     def forward(self, x):
+        # pdb.set_trace()
         x = self.W1_pos(x) - self.W1_neg(x)  # [n, d * m1]
         x = x.view(-1, self.dims[0], self.dims[1]) # [n, d, m1]
         x = torch.sigmoid(x) # [n, d, m1]
@@ -94,8 +98,9 @@ class MLP(nn.Module):
 
 
 def negative_log_likelihood_loss(mu, var, target):
+    n = target.shape[0]
     R = target - mu
-    return 0.5 * torch.sum(torch.log(2 * np.pi * var) + R ** 2 / var)
+    return 0.5 / n * torch.sum(torch.log(2 * np.pi * var) + R ** 2 / var)
 
 
 def squared_loss(output, target):
