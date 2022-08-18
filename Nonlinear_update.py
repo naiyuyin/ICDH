@@ -5,6 +5,8 @@ from lbfgsb_scipy import LBFGSBScipy
 from trace_expm import trace_expm
 from locally_connected import LocallyConnected
 import utils as ut
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 class MLP(nn.Module):
@@ -50,10 +52,11 @@ class MLP(nn.Module):
         mu = self.W2(x) # [n, d, m2 = 1]
         mu = mu.squeeze(dim=2)  # [n, d]
 
-        var = torch.exp(self.W3(x))  # [n, d, m2 = 1]
-        var = var.squeeze(dim=2) # [n, d]
+        # var = torch.exp(self.W3(x))  # [n, d, m2 = 1]
         # var = torch.exp(torch.sigmoid(self.W3(x)))
-        # var = self.acfun(self.W3(x))
+        var = self.acfun(self.W3(x))
+        var = var.squeeze(dim=2) # [n, d]
+
         return mu, var
 
     def h_func(self):
@@ -67,6 +70,17 @@ class MLP(nn.Module):
         # E = torch.matrix_power(M, d-1)
         # h = (E.t() * M).sum() - d
         return h
+
+    def l2_reg(self):
+        reg = 0.
+        W1_weight = self.W1_pos.weight - self.W1_neg.weight  # [j * m1, i]
+        reg += torch.sum(W1_weight ** 2)
+        reg += torch.sum(self.W2.weight ** 2)
+        return reg
+
+    def fc1_l1_reg(self):
+        reg = torch.sum(self.W1_pos.weight + self.W1_neg.weight)
+        return reg
 
     @torch.no_grad()
     def fc1_to_adj(self) -> np.ndarray:
@@ -113,7 +127,7 @@ def E_step(model: nn.Module,
     # return model
 
 
-def dual_ascent_step(model, x, var, rho, alpha, h, rho_max):
+def dual_ascent_step(model, x, var, lamb1, lamb2, rho, alpha, h, rho_max):
     h_new = None
     optimizer = LBFGSBScipy(model.parameters())  # check if they take no_grad
     while rho < rho_max:
@@ -124,7 +138,9 @@ def dual_ascent_step(model, x, var, rho, alpha, h, rho_max):
             # loss = squared_loss(x_hat, x)
             h_val = model.h_func()
             penalty = 0.5 * rho * h_val * h_val + alpha * h_val
-            obj = loss + penalty
+            l2_reg = 0.5 * lamb2 * model.l2_reg()
+            l1_reg = lamb1 * model.fc1_l1_reg()
+            obj = loss + penalty + l2_reg + l1_reg
             obj.backward()
             return obj
 
@@ -142,6 +158,8 @@ def dual_ascent_step(model, x, var, rho, alpha, h, rho_max):
 def M_step(model: nn.Module,
            X: torch.tensor,
            var: torch.tensor,
+           lamb1: float,
+           lamb2: float,
            max_iter: int = 100,
            h_tol: float = 1e-8,
            rho_max: float = 1e+16):
@@ -151,7 +169,7 @@ def M_step(model: nn.Module,
     model.W3.weight.requires_grad = False
     rho, alpha, h = 1.0, 0.0, np.inf
     for _ in range(max_iter):
-        rho, alpha, h = dual_ascent_step(model, X, var, rho, alpha, h, rho_max)
+        rho, alpha, h = dual_ascent_step(model, X, var, lamb1, lamb2, rho, alpha, h, rho_max)
         if h <= h_tol or rho >= rho_max:
             break
     # return model
@@ -159,17 +177,20 @@ def M_step(model: nn.Module,
 
 def Nonlinear_update(model: nn.Module,
                      X: np.ndarray,
+                     lamb1: float,
+                     lamb2: float,
                      W_true: np.ndarray,
                      w_threshold: float = 0.3,
                      verbose: bool = True):
+    torch.set_default_dtype(torch.double)
+    np.set_printoptions(precision=3)
     X_torch = torch.from_numpy(X)
     n, d = X_torch.shape
     nlls = []
 
     # initial variance and W1, W2
-    var_init = torch.zeros([n, d])
-    M_step(model, X_torch, var_init)
-    E_step(model, X_torch)
+    M_step(model=model, X=torch.from_numpy(X), var=torch.ones([n, d]), lamb1=lamb1, lamb2=lamb2)
+    E_step(model=model, x=X_torch)
     with torch.no_grad():
         x_hat, var_est = model(X_torch)
         nll = negative_log_likelihood_loss(x_hat, var_est, X_torch).item()
@@ -184,7 +205,7 @@ def Nonlinear_update(model: nn.Module,
     # EM-updating
     while True:
         # M step
-        M_step(model, X_torch, var_est)
+        M_step(model, X_torch, var_est, lamb1, lamb2)
         # E step
         E_step(model, X_torch)
         with torch.no_grad():
@@ -202,7 +223,7 @@ def Nonlinear_update(model: nn.Module,
             nlls.append(nll)
             w_est = model.fc1_to_adj()
 
-    w_est[np.abs(w_est) < w_threshold] = 0
+    # w_est[np.abs(w_est) < w_threshold] = 0
     return w_est, nlls
 
 
@@ -224,17 +245,18 @@ def main():
     n, d = X.shape
 
     model = MLP(dims=[d, 10, 1], bias=False)
-    # M_step(model, torch.from_numpy(X), torch.ones([n, d]))
+    A_est, nlls = Nonlinear_update(model=model, X=X, lamb1=0.05, lamb2=0.05, W_true=W_true)
+    # M_step(model=model, X=torch.from_numpy(X), var=torch.ones([n, d]), lamb1=0.05, lamb2=0.05)
     # torch.save({'model_state_dict': model.state_dict()}, 'model_init.pt')
-    checkpoint = torch.load('model_init.pt')
-    model.load_state_dict(checkpoint['model_state_dict'])
-
-    E_step(model, torch.from_numpy(X))
-    A_est = model.fc1_to_adj()
-    A_est[A_est < 0.3] = 0
+    # checkpoint = torch.load('model_init.pt')
+    # model.load_state_dict(checkpoint['model_state_dict'])
+    # #
+    # E_step(model, torch.from_numpy(X))
+    # A_est = model.fc1_to_adj()
+    # A_est[A_est < 0.3] = 0
     assert ut.is_dag(A_est)
-    SHD, _, _, _ = ut.count_accuracy(W_true, A_est != 0)
-    print(SHD)
+    SHD, extra, missing, reverse = ut.count_accuracy(W_true, A_est != 0)
+    print(f"SHD: {SHD}, extra: {extra}, missing: {missing}, reverse: {reverse}.")
 
 
 if __name__ == '__main__':
