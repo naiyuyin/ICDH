@@ -175,21 +175,24 @@ def M_step(model: nn.Module,
     # return model
 
 
-def Nonlinear_update(model: nn.Module,
-                     X: np.ndarray,
-                     lamb1: float,
-                     lamb2: float,
-                     W_true: np.ndarray,
-                     w_threshold: float = 0.3,
-                     verbose: bool = True):
+def Nonlinear_update(model,
+                     X,
+                     lamb1,
+                     lamb2,
+                     device,
+                     W_true,
+                     w_threshold=0.3,
+                     verbose=True):
     torch.set_default_dtype(torch.double)
     np.set_printoptions(precision=3)
-    X_torch = torch.from_numpy(X)
+
+    X_torch = torch.from_numpy(X).to(device)
     n, d = X_torch.shape
+    var_init = torch.ones([n, d]).to(device)
     nlls = []
 
     # initial variance and W1, W2
-    M_step(model=model, X=torch.from_numpy(X), var=torch.ones([n, d]), lamb1=lamb1, lamb2=lamb2)
+    M_step(model=model, X=X_torch, var=var_init, lamb1=lamb1, lamb2=lamb2)
     E_step(model=model, x=X_torch)
     with torch.no_grad():
         x_hat, var_est = model(X_torch)
