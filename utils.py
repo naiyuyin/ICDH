@@ -257,7 +257,7 @@ def simulate_nonlinear_sem(B, n, sem_type, noise_scale=None):
         return x
 
     d = B.shape[0]
-    scale_vec = noise_scale if noise_scale else np.ones(d)
+    scale_vec = noise_scale # if noise_scale else np.ones(d)
     X = np.zeros([n, d])
     G = ig.Graph.Adjacency(B.tolist())
     ordered_vertices = G.topological_sorting()
@@ -266,6 +266,70 @@ def simulate_nonlinear_sem(B, n, sem_type, noise_scale=None):
         parents = G.neighbors(j, mode=ig.IN)
         X[:, j] = _simulate_single_equation(X[:, parents], scale_vec[j])
     return X
+
+
+
+def simulate_nonlinear_sem_hetero(B, n, sem_type, noise_scale=None):
+    """Simulate samples from nonlinear SEM.
+
+    Args:
+        B (np.ndarray): [d, d] binary adj matrix of DAG
+        n (int): num of samples
+        sem_type (str): mlp, mim, gp, gp-add
+        noise_scale (np.ndarray): scale parameter of additive noise, default all ones
+
+    Returns:
+        X (np.ndarray): [n, d] sample matrix
+    """
+
+    def _simulate_single_equation(X, scale):
+        """X: [n, num of parents], x: [n]"""
+        z = np.random.normal(scale=scale, size=n)
+        pa_size = X.shape[1]
+        if pa_size == 0:
+            return z, scale
+        if sem_type == 'mlp':
+            hidden = 100
+            W1 = np.random.uniform(low=0.5, high=2.0, size=[pa_size, hidden])
+            W1[np.random.rand(*W1.shape) < 0.5] *= -1
+            W2 = np.random.uniform(low=0.5, high=2.0, size=hidden)
+            W2[np.random.rand(hidden) < 0.5] *= -1
+            W3 = np.random.uniform(low=0.5, high=2.0, size=hidden)
+            W3[np.random.rand(hidden) < 0.5] *= -1
+            var = np.exp(sigmoid(X @ W1) @ W3)
+            x = np.random.normal(loc= sigmoid(X @ W1) @ W2, scale=np.sqrt(var), size=(n,))
+        elif sem_type == 'mim':
+            w1 = np.random.uniform(low=0.5, high=2.0, size=pa_size)
+            w1[np.random.rand(pa_size) < 0.5] *= -1
+            w2 = np.random.uniform(low=0.5, high=2.0, size=pa_size)
+            w2[np.random.rand(pa_size) < 0.5] *= -1
+            w3 = np.random.uniform(low=0.5, high=2.0, size=pa_size)
+            w3[np.random.rand(pa_size) < 0.5] *= -1
+            x = np.tanh(X @ w1) + np.cos(X @ w2) + np.sin(X @ w3) + z
+        elif sem_type == 'gp':
+            from sklearn.gaussian_process import GaussianProcessRegressor
+            gp = GaussianProcessRegressor()
+            x = gp.sample_y(X, random_state=None).flatten() + z
+        elif sem_type == 'gp-add':
+            from sklearn.gaussian_process import GaussianProcessRegressor
+            gp = GaussianProcessRegressor()
+            x = sum([gp.sample_y(X[:, i, None], random_state=None).flatten()
+                     for i in range(X.shape[1])]) + z
+        else:
+            raise ValueError('unknown sem type')
+        return x, var
+
+    d = B.shape[0]
+    scale_vec = noise_scale if noise_scale else np.ones(d)
+    X = np.zeros([n, d])
+    Var_est = np.zeros([n, d])
+    G = ig.Graph.Adjacency(B.tolist())
+    ordered_vertices = G.topological_sorting()
+    assert len(ordered_vertices) == d
+    for j in ordered_vertices:
+        parents = G.neighbors(j, mode=ig.IN)
+        X[:, j], Var_est[:,j] = _simulate_single_equation(X[:, parents], scale_vec[j])
+    return X, Var_est
 
 
 def count_accuracy(B_true, B_est):
