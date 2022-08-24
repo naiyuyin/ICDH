@@ -21,14 +21,14 @@ def main_our(args):
     np.set_printoptions(precision=3)
 
 
-    res = np.zeros([10, 5])
+    res = np.zeros([5, 5])
     np.savetxt(f'results/our_nonlinear_{args.data_type}_{args.graph_type}{args.s0}_d{args.num_size}.csv', res, delimiter=',')
     res_path = f'results/{args.data_type}/{args.graph_type}{args.s0}_d{args.num_size}'
     if not os.path.isdir(f'results/{args.data_type}'):
         os.mkdir(f'results/{args.data_type}')
     if not os.path.isdir(res_path):
         os.mkdir(res_path)
-    for s in range(10):
+    for s in range(5):
         # load data
         print("\n--------------------------------------------------")
         res = np.loadtxt(f'results/our_nonlinear_{args.data_type}_{args.graph_type}{args.s0}_d{args.num_size}.csv', delimiter=',')
@@ -69,6 +69,6 @@ if __name__ == '__main__':
     parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
     parser.add_argument('--cuda_device', type=str, default="1", choices=["0", "1", "2", "3", "4", "5"])
     args = parser.parse_args()
-    main_syn(args)
+    # main_syn(args)
     # main_notears(args)
-    # main_our(args)
+    main_our(args)

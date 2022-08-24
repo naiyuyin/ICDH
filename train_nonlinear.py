@@ -73,14 +73,14 @@ def main_notears(args):
     # print(f'SHD {SHD}, extra {extra}, missing {missing}, reverse {reverse}.')
 
 
-    res = np.zeros([10, 5])
+    res = np.zeros([5, 5])
     np.savetxt(f'results/nonlinear_{args.data_type}_{args.graph_type}{args.s0}_d{args.num_size}.csv', res, delimiter=',')
     res_path = f'results/{args.data_type}/{args.graph_type}{args.s0}_d{args.num_size}'
     if not os.path.isdir(f'results/{args.data_type}'):
         os.mkdir(f'results/{args.data_type}')
     if not os.path.isdir(res_path):
         os.mkdir(res_path)
-    for s in range(10):
+    for s in range(5):
         # load data
         print("\n--------------------------------------------------")
         res = np.loadtxt(f'results/nonlinear_{args.data_type}_{args.graph_type}{args.s0}_d{args.num_size}.csv', delimiter=',')
@@ -157,8 +157,8 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', type=int, default=1000, help="sample size of the generated data")
     parser.add_argument('--graph_type', type=str, default='ER', choices=['ER', 'SF'])
     parser.add_argument('--s0', type=int, default=1, help="degree of variables")
-    parser.add_argument('--num_size', type=int, default=5, help="variable size to be generated")
-    parser.add_argument('--data_type', type=str, default='hetero', choices=['homo_ev', 'hetero', 'homo_nv'],help='data type')
+    parser.add_argument('--num_size', type=int, default=20, help="variable size to be generated")
+    parser.add_argument('--data_type', type=str, default='homo_nv', choices=['homo_ev', 'hetero', 'homo_nv'],help='data type')
     parser.add_argument('--sem', type=str, default='mlp', choices=['mlp', 'gp'], help='Types of SEM model')
     parser.add_argument('--lamb1', type=float, default=0.01, help="The coefficient of l1 regularization on parameters.")
     parser.add_argument('--lamb2', type=float, default=0.01, help="The coefficient of l2 regularization on parameters.")
