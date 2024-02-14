@@ -1,9 +1,12 @@
-# causal_discovery_heteroscedastic_data
+# Identifiable Causal Discovery under Heteroscedastic data (ICDH)
 
-## Nonlinear Implementation Plan:
-* Finish the algorithm in `Nonlinear_Update.py`
-    * Finish Model
-    * Finish E-step, M-step
-    * Finish main procedure
-* Write the data generation script to generate nonlinear data.
-* Write train and test script.
+It implements the AAAI24 paper "Effective Causal Discovery under Heteroscedatic Noise Model". 
+
+Our paper can be found   
+
+
+
+## Install the algorithm
+## Example script for running the algorithm.
+
+
