@@ -160,7 +160,7 @@ if __name__ == '__main__':
     parser.add_argument('--graph_type', type=str, default='ER', choices=['ER', 'SF'])
     parser.add_argument('--s0', type=int, default=3, help="degree of variables")
     parser.add_argument('--num_size', type=int, default=10, help="variable size to be generated")
-    parser.add_argument('--data_type', type=str, default='hetero', choices=['homo_ev', 'hetero', 'homo_nv'],help='data type')
+    parser.add_argument('--data_type', type=str, default='hetero_nonlinear', choices=['homo_ev_nonlinear', 'hetero_nonlinear', 'homo_nv_nonlinear'],help='data type')
     parser.add_argument('--sem', type=str, default='mlp', choices=['mlp', 'gp'], help='Types of SEM model')
     parser.add_argument('--lamb1', type=float, default=0.03, help="The coefficient of l1 regularization on parameters.")
     parser.add_argument('--lamb2', type=float, default=0.03, help="The coefficient of l2 regularization on parameters.")

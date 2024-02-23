@@ -4,7 +4,7 @@ import utils as ut
 import os
 
 
-def hetero_old_synthetic_data_generation(d, n, e, graph_type, A_range, B_range, B0_range):
+def hetero_linear_synthetic_data_generation(d, n, e, graph_type, A_range, B_range, B0_range):
     G = ut.simulate_dag(d, e, graph_type)
     A = ut.simulate_parameter(G, w_ranges=((-A_range, -0.5), (0.5, A_range)))
     A_0 = np.random.uniform(-A_range, A_range, size=(d,))
@@ -14,7 +14,7 @@ def hetero_old_synthetic_data_generation(d, n, e, graph_type, A_range, B_range, 
     return X, A, A_0, B, B_0, G, Var 
 
 
-def homo_synthetic_data_generation(d, n, e, graph_type, a_range):
+def homo_linear_synthetic_data_generation(d, n, e, graph_type, a_range):
     G = ut.simulate_dag(d, e, graph_type)
     A = ut.simulate_parameter(G, w_ranges=((-a_range, -0.5), (0.5, a_range)))
     # A_0 = np.random.uniform(-a_range, a_range, size=(d,))
@@ -22,28 +22,7 @@ def homo_synthetic_data_generation(d, n, e, graph_type, a_range):
     return X, A, G
 
 
-def hetero_new_synthetic_data_generation(d, n, e, graph_type, A_range, a_range, b_range):
-    G = ut.simulate_dag(d, e, graph_type)
-    A = ut.simulate_parameter(G, w_ranges=((-A_range, -0.5), (0.5, A_range)))
-    A_0 = np.random.uniform(-A_range, A_range, size=(d,))
-    a = np.random.uniform(0, a_range, size=(d,))
-    b = np.random.uniform(0, b_range, size=(d,))
-    X,  Var = ut.simulate_linear_neq_v2(A, A_0, a, b, n)
-    return X, A, A_0, a, b, G, Var
-
-
-def hetero_new2_synthetic_data_generation(d, n, e, graph_type, A_range):
-    G = ut.simulate_dag(d, e, graph_type)
-    A = ut.simulate_parameter(G, w_ranges=((-A_range, -0.5), (0.5, A_range)))
-    A_0 = np.random.uniform(-A_range, A_range, size=(d,))
-    a = np.random.normal(0, 0.1)
-    B = a * A
-    B_0 = a * A_0
-    X,  Var = ut.simulate_linear_neq(A, A_0, B, B_0, n)
-    return X, A, A_0, a, B, Var
-
-
-def main(args):
+def main_linear_syn(args):
     # specify parameters
     d = args.num_size
     n = args.sample_size
@@ -52,11 +31,7 @@ def main(args):
     data_type = args.data_type
     ut.set_random_seed(args.random_seed)
     np.random.seed(args.random_seed)
-    if data_type == "hetero_new":
-        A_range = 2.0
-        a_range = 5.0
-        b_range = 5.0
-    elif data_type == "hetero_old":
+    if data_type == "hetero_linear":
         A_range = 2.0
         B_range = 1.0
         B0_range = 0.5
