@@ -166,49 +166,6 @@ def simulate_linear_neq(W, W_0, B, B_0, n):
     return X, Var
 
 
-def simulate_linear_neq_v2(W, W_0, A, B, n):
-    def _simulate_single_equation_neq_v2(X, w, w0, a, b):
-        """X: [n, num of parents], w: [num of parents], x: [n]"""
-        var = np.random.uniform(a, b, size=(n,))
-        x = np.random.normal(loc= X @ w + w0, scale=np.sqrt(var), size=(n,))
-        return x, var
-
-    d = W.shape[0]
-    if not is_dag(W):
-        raise ValueError('W must be a DAG')
-    G = ig.Graph.Weighted_Adjacency(W.tolist())
-    ordered_vertices = G.topological_sorting()
-    assert len(ordered_vertices) == d
-    assert len(A) == d
-    assert len(B) == d
-    X = np.zeros([n, d])
-    Var = np.zeros([n, d])
-    for j in ordered_vertices:
-        parents = G.neighbors(j, mode=ig.IN)
-        X[:, j], Var[:,  j] = _simulate_single_equation(X[:, parents], W[parents, j], W_0[j], A[j], B[j])
-    return X,  Var
-
-
-def simulate_linear_eq_bias(W, W_0, n):
-    def _simulate_single_equation(X, w, w0):
-        """X: [n, num of parents], w: [num of parents], x: [n]"""
-        z = np.random.normal(loc=0, scale=1, size=(n,))
-        x = X @ w + w0 + z
-        return x
-
-    d = W.shape[0]
-    if not is_dag(W):
-        raise ValueError('W must be a DAG')
-    G = ig.Graph.Weighted_Adjacency(W.tolist())
-    ordered_vertices = G.topological_sorting()
-    assert len(ordered_vertices) == d
-    X = np.zeros([n, d])
-    for j in ordered_vertices:
-        parents = G.neighbors(j, mode=ig.IN)
-        X[:, j] = _simulate_single_equation(X[:, parents], W[parents, j], W_0[j])
-    return X
-
-
 def simulate_nonlinear_sem(B, n, sem_type, noise_scale=None):
     """Simulate samples from nonlinear SEM.
 
@@ -260,7 +217,6 @@ def simulate_nonlinear_sem(B, n, sem_type, noise_scale=None):
     if noise_scale is not None:
         noise_scale = np.ones(d)
     scale_vec = noise_scale
-    # scale_vec = noise_scale # if noise_scale else np.ones(d)
     X = np.zeros([n, d])
     G = ig.Graph.Adjacency(B.tolist())
     ordered_vertices = G.topological_sorting()
@@ -269,7 +225,6 @@ def simulate_nonlinear_sem(B, n, sem_type, noise_scale=None):
         parents = G.neighbors(j, mode=ig.IN)
         X[:, j] = _simulate_single_equation(X[:, parents], scale_vec[j])
     return X
-
 
 
 def simulate_nonlinear_sem_hetero(B, n, sem_type, noise_scale=None):
