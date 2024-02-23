@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from ICDH import MLP
-from ICDH import ICDH
+from ICDH import MLP, ICDH
+from data_generation import main_nonlinear_syn
 import utils as ut
 import time as t
 import argparse
@@ -11,21 +11,16 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 def train_ICDH(args):
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    if use_cuda:
-        os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda_device
-    torch.manual_seed(args.random_seed)
-    device = torch.device("cuda:0" if use_cuda else "cpu")
     torch.set_default_dtype(torch.double)
     np.set_printoptions(precision=3)
 
     # generate synthetic data
     print(f"Generate {args.sample_size} nonlinear {args.data_type} data from {args.graph_type}{args.s0} graphs with {args.num_size} variables.")
-    n, d, s0, graph_type, sem_type = args.sample_size, args.num_size, args.num_size * args.s0, args.graph_type, args.sem
-    W_true = ut.simulate_dag(d, s0, graph_type)
-    np.savetxt('W_true.csv', W_true, delimiter=',')
-    X = ut.simulate_nonlinear_sem_hetero(W_true, n, sem_type)
-    np.savetxt('X.csv', X, delimiter=',')
+    main_nonlinear_syn(args)
+    print(f"Data generation completes!")
+    W_true = np.loadtxt(f"W_true.csv", delimiter=",")
+    X = np.loadtxt(f"X_{args.data_type}.csv", delimiter=",")
+    n, d = X.shape
 
     # run ICDH
     print(f"Run our ICDH method on the generated data.")
@@ -49,10 +44,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_size', type=int, default=5, help="variable size to be generated")
     parser.add_argument('--data_type', type=str, default='hetero_nonlinear', choices=['homo_ev_nonlinear', 'hetero_nonlinear', 'homo_nv_nonlinear'],help='data type')
     parser.add_argument('--sem', type=str, default='mlp', choices=['mlp', 'gp'], help='Types of SEM model')
-    parser.add_argument('--lamb1', type=float, default=0.05, help="The coefficient of l1 regularization on parameters.")
-    parser.add_argument('--lamb2', type=float, default=0.05, help="The coefficient of l2 regularization on parameters.")
-    parser.add_argument('--random_seed', type=int, default=123, help="Random seeds.")
-    parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
-    parser.add_argument('--cuda_device', type=str, default="1", choices=["0", "1", "2", "3", "4", "5"])
+    parser.add_argument('--lamb1', type=float, default=0.01, help="The coefficient of l1 regularization on parameters.")
+    parser.add_argument('--lamb2', type=float, default=0.01, help="The coefficient of l2 regularization on parameters.")
+    parser.add_argument('--random_seed', type=int, default=1, help="Random seeds.")
     args = parser.parse_args()
     train_ICDH(args)

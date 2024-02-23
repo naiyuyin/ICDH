@@ -11,7 +11,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 class MLP(nn.Module):
-    def __init__(self, dims, device, bias=False):
+    def __init__(self, dims, bias=False):
         super(MLP, self).__init__()
         assert len(dims) >= 2
         assert dims[-1] == 1
@@ -19,19 +19,19 @@ class MLP(nn.Module):
         self.dims = dims
 
         # First layer weights, W1 -> W1+, W1-
-        self.W1_pos = nn.Linear(d, d * dims[1], bias=bias).to(device)
-        self.W1_neg = nn.Linear(d, d * dims[1], bias=bias).to(device)
+        self.W1_pos = nn.Linear(d, d * dims[1], bias=bias)
+        self.W1_neg = nn.Linear(d, d * dims[1], bias=bias)
         self.W1_pos.weight.bounds = self._bounds()
         self.W1_neg.weight.bounds = self._bounds()
 
         # Second layer weights for mean estimation W2
-        self.W2 = LocallyConnected(d, dims[1], 1, bias=bias).to(device)
-        self.W2.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1)).to(device)
+        self.W2 = LocallyConnected(d, dims[1], 1, bias=bias)
+        self.W2.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1))
 
         # Second layer weights for variance estimate W3
-        self.W3 = LocallyConnected(d, dims[1], 1, bias=bias).to(device)
-        self.W3.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1)).to(device)
-        self.W4 = nn.Parameter(torch.randn(1,)).to(device)
+        self.W3 = LocallyConnected(d, dims[1], 1, bias=bias)
+        self.W3.weight.data[:] = torch.from_numpy(np.random.randn(d, dims[1], 1))
+        self.W4 = nn.Parameter(torch.randn(1,))
         self.acfun = nn.Softplus()
         self.tanh = nn.Tanh()
 
@@ -185,17 +185,16 @@ def ICDH(model,
          X,
          lamb1,
          lamb2,
-         device,
          W_true,
          w_threshold=0.3,
          tol=1e-2,
-         verbose=True):
+         verbose=False):
     torch.set_default_dtype(torch.double)
     np.set_printoptions(precision=3)
 
-    X_torch = torch.from_numpy(X).to(device)
+    X_torch = torch.from_numpy(X)
     n, d = X_torch.shape
-    var_init = torch.ones([n, d]).to(device)
+    var_init = torch.ones([n, d])
     nlls = []
     recs = []
 

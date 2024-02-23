@@ -19,21 +19,21 @@ def main_nonlinear_syn(args):
 
     # generate graph
     W_true = ut.simulate_dag(d, s0, graph_type)
-    np.savetxt(f"W.csv", W_true, delimiter=',')
+    np.savetxt(f"W_true.csv", W_true, delimiter=',')
 
     # generate nonlinear data
     if args.data_type == 'homo_ev_nonlinear':
         X = ut.simulate_nonlinear_sem(W_true, n, sem_type)
-        np.savetxt(f"/X_{args.data_type}.csv", X, delimiter=',')
+        np.savetxt(f"X_{args.data_type}.csv", X, delimiter=',')
     elif args.data_type == 'homo_nv_nonlinear':
         noise_var = np.random.uniform(0.5, 2, size=(d))
         noise_scale = np.sqrt(noise_var)
         X = ut.simulate_nonlinear_sem(W_true, n, sem_type, noise_scale)
-        np.savetxt(f"/X_{args.data_type}.csv", X, delimiter=',')
+        np.savetxt(f"X_{args.data_type}.csv", X, delimiter=',')
     elif args.data_type == 'hetero_nonlinear':
         X, var_est = ut.simulate_nonlinear_sem_hetero(W_true, n, sem_type)
-        np.savetxt(f"/X_{args.data_type}.csv", X, delimiter=',')
-        np.savetxt(f"/var_{args.data_type}.csv", var_est, delimiter=',')
+        np.savetxt(f"X_{args.data_type}.csv", X, delimiter=',')
+        np.savetxt(f"var_{args.data_type}.csv", var_est, delimiter=',')
 
 
 if __name__ == "__main__":
