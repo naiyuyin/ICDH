@@ -8,7 +8,6 @@ import utils as ut
 import os
 from torch.nn import functional as F
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-import pdb
 
 
 class MLP(nn.Module):
@@ -22,10 +21,8 @@ class MLP(nn.Module):
         # First layer weights, W1 -> W1+, W1-
         self.W1_pos = nn.Linear(d, d * dims[1], bias=bias).to(device)
         self.W1_neg = nn.Linear(d, d * dims[1], bias=bias).to(device)
-        # pdb.set_trace()
         self.W1_pos.weight.bounds = self._bounds()
         self.W1_neg.weight.bounds = self._bounds()
-        # pdb.set_trace()
 
         # Second layer weights for mean estimation W2
         self.W2 = LocallyConnected(d, dims[1], 1, bias=bias).to(device)
@@ -52,22 +49,19 @@ class MLP(nn.Module):
         return bounds
 
     def forward(self, x):
-        # pdb.set_trace()
         x = self.W1_pos(x) - self.W1_neg(x)  # [n, d * m1]
         x = x.view(-1, self.dims[0], self.dims[1]) # [n, d, m1]
         h = torch.sigmoid(x) # [n, d, m1]
-        # x = F.relu(x)
         mu = self.W2(h) # [n, d, m2 = 1]
         mu = mu.squeeze(dim=2)  # [n, d]
 
+        var = F.relu(self.W3(h)) + torch.sigmoid(self.W4)
+        # Other possible functions for estimating variances.
         # var = torch.exp(self.W3(x))  # [n, d, m2 = 1]
         # var = torch.exp(torch.sigmoid(self.W3(x)))
-        # h2 = F.relu(x)
         # var = self.acfun(self.W3(x))
-        var = F.relu(self.W3(h)) + torch.sigmoid(self.W4)
         # var = F.relu(torch.nn.Tanh(self.W3(h)))
         var = var.squeeze(dim=2) # [n, d]
-
         return mu, var
 
     def h_func(self):
@@ -107,7 +101,7 @@ class MLP(nn.Module):
 def negative_log_likelihood_loss(mu, var, target):
     n = target.shape[0]
     R = target - mu
-    return 0.5 / n * torch.sum(torch.log(2 * np.pi * var)+ R ** 2 / var)
+    return 0.5 / n * torch.sum(torch.log(2 * np.pi * var) + R ** 2 / var)
 
 
 def squared_loss(output, target):
@@ -116,8 +110,9 @@ def squared_loss(output, target):
     return loss
 
 
-def E_step(model: nn.Module,
+def A_step(model: nn.Module,
            x: torch.tensor):
+    # This is the Phase-I step, where we estimate the optimal values for variances.
     model.W1_pos.weight.requires_grad = False
     model.W1_neg.weight.requires_grad = False
     model.W2.weight.requires_grad = False
@@ -136,18 +131,17 @@ def E_step(model: nn.Module,
         x_hat, var = model(x)
         loss = negative_log_likelihood_loss(x_hat, var, x).item()
         print(f'NLL loss: {loss: .4f}.')
-    # return model
 
 
 def dual_ascent_step(model, x, var, lamb1, lamb2, rho, alpha, h, rho_max):
+    # lamb1 and lamb2 are the coefficients for the L1 and L2 regualrization. The values for these two hypterparameters need to be tuned.
     h_new = None
-    optimizer = LBFGSBScipy(model.parameters())  # check if they take no_grad
+    optimizer = LBFGSBScipy(model.parameters())
     while rho < rho_max:
         def closure():
             optimizer.zero_grad()
             x_hat, _ = model(x)
             loss = negative_log_likelihood_loss(x_hat, var, x)
-            # loss = squared_loss(x_hat, x)
             h_val = model.h_func()
             penalty = 0.5 * rho * h_val * h_val + alpha * h_val
             l2_reg = 0.5 * lamb2 * model.l2_reg()
@@ -167,7 +161,7 @@ def dual_ascent_step(model, x, var, lamb1, lamb2, rho, alpha, h, rho_max):
     return rho, alpha, h_new
 
 
-def M_step(model: nn.Module,
+def B_step(model: nn.Module,
            X: torch.tensor,
            var: torch.tensor,
            lamb1: float,
@@ -175,6 +169,7 @@ def M_step(model: nn.Module,
            max_iter: int = 100,
            h_tol: float = 1e-8,
            rho_max: float = 1e+16):
+    # This is the Phase-II step, where we optimize over the structural parameters using fixed variances.
     model.W1_pos.weight.requires_grad = True
     model.W1_neg.weight.requires_grad = True
     model.W2.weight.requires_grad = True
@@ -184,30 +179,29 @@ def M_step(model: nn.Module,
         rho, alpha, h = dual_ascent_step(model, X, var, lamb1, lamb2, rho, alpha, h, rho_max)
         if h <= h_tol or rho >= rho_max:
             break
-    # return model
 
 
-def Nonlinear_update(model,
-                     X,
-                     lamb1,
-                     lamb2,
-                     device,
-                     W_true,
-                     w_threshold=0.3,
-                     verbose=True):
+def ICDH(model,
+         X,
+         lamb1,
+         lamb2,
+         device,
+         W_true,
+         w_threshold=0.3,
+         tol=1e-2,
+         verbose=True):
     torch.set_default_dtype(torch.double)
     np.set_printoptions(precision=3)
 
     X_torch = torch.from_numpy(X).to(device)
     n, d = X_torch.shape
     var_init = torch.ones([n, d]).to(device)
-    # var_init = torch.zeros([n, d]).to(device)
     nlls = []
     recs = []
 
     # initial variance and W1, W2
-    M_step(model=model, X=X_torch, var=var_init, lamb1=lamb1, lamb2=lamb2)
-    E_step(model=model, x=X_torch)
+    B_step(model=model, X=X_torch, var=var_init, lamb1=lamb1, lamb2=lamb2)
+    A_step(model=model, x=X_torch)
     with torch.no_grad():
         x_hat, var_est = model(X_torch)
         nll = negative_log_likelihood_loss(x_hat, var_est, X_torch).item()
@@ -224,12 +218,12 @@ def Nonlinear_update(model,
         recs.append(rec)
     w_est = model.fc1_to_adj()
 
-    # EM-updating
+    # Iterative updates
     while True:
-        # M step
-        M_step(model, X_torch, var_est, lamb1, lamb2)
-        # E step
-        E_step(model, X_torch)
+        # Phase-II
+        B_step(model, X_torch, var_est, lamb1, lamb2)
+        # Phase-I
+        A_step(model, X_torch)
         with torch.no_grad():
             x_hat, var_est = model(X_torch)
             nll = negative_log_likelihood_loss(x_hat, var_est, X_torch).item()
@@ -240,48 +234,13 @@ def Nonlinear_update(model,
                 SHD, extra, missing, reverse = ut.count_accuracy(W_true, w_temp != 0)
                 print(f'After initialization: NLL loss: {nll: .4f}, rec loss: {rec: .4f}, SHD: ({SHD}, {extra}, {missing}, {reverse})')
 
-        if nlls[-1] - nll < 1e-2:
-        # if recs[-1] - rec < 1e-1:
+        if nlls[-1] - nll < tol:
             break
         else:
             nlls.append(nll)
             w_est = model.fc1_to_adj()
 
+    # depends on whether you want the thresholded results or not
     # w_est[np.abs(w_est) < w_threshold] = 0
     return w_est, nlls
 
-
-def main():
-    torch.set_default_dtype(torch.double)
-    np.set_printoptions(precision=3)
-
-    # generate synthetic data
-    # ut.set_random_seed(123)
-    # n, d, s0, graph_type, sem_type = 1000, 5, 9, 'ER', 'mlp'
-    # B_true = ut.simulate_dag(d, s0, graph_type)
-    # np.savetxt('W_true.csv', B_true, delimiter=',')
-    # X = ut.simulate_nonlinear_sem(B_true, n, sem_type)
-    # np.savetxt('X.csv', X, delimiter=',')
-
-    # load data
-    X = np.loadtxt('X.csv', delimiter=',')
-    W_true = np.loadtxt('W_true.csv', delimiter=',')
-    n, d = X.shape
-
-    model = MLP(dims=[d, 10, 1], bias=False)
-    A_est, nlls = Nonlinear_update(model=model, X=X, lamb1=0.05, lamb2=0.05, W_true=W_true)
-    # M_step(model=model, X=torch.from_numpy(X), var=torch.ones([n, d]), lamb1=0.05, lamb2=0.05)
-    # torch.save({'model_state_dict': model.state_dict()}, 'model_init.pt')
-    # checkpoint = torch.load('model_init.pt')
-    # model.load_state_dict(checkpoint['model_state_dict'])
-    # #
-    # E_step(model, torch.from_numpy(X))
-    # A_est = model.fc1_to_adj()
-    # A_est[A_est < 0.3] = 0
-    assert ut.is_dag(A_est)
-    SHD, extra, missing, reverse = ut.count_accuracy(W_true, A_est != 0)
-    print(f"SHD: {SHD}, extra: {extra}, missing: {missing}, reverse: {reverse}.")
-
-
-if __name__ == '__main__':
-    main()

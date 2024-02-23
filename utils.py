@@ -255,7 +255,9 @@ def simulate_nonlinear_sem_hetero(B, n, sem_type, noise_scale=None):
             W3 = np.random.uniform(low=0.5, high=2.0, size=hidden)
             W3[np.random.rand(hidden) < 0.5] *= -1
             var = np.log(1 + np.exp(sigmoid(X @ W1) @ W3))
-            x = np.random.normal(loc= sigmoid(X @ W1) @ W2, scale=np.sqrt(var), size=(n,))
+            # you may also explore with
+            # var = np.exp(sigmoid(X @ W1) @ W3)
+            x = np.random.normal(loc=sigmoid(X @ W1) @ W2, scale=np.sqrt(var), size=(n,))
         elif sem_type == 'mim':
             w1 = np.random.uniform(low=0.5, high=2.0, size=pa_size)
             w1[np.random.rand(pa_size) < 0.5] *= -1

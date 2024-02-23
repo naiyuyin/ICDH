@@ -21,6 +21,7 @@ def main_nonlinear_syn(args):
     W_true = ut.simulate_dag(d, s0, graph_type)
     np.savetxt(f"W.csv", W_true, delimiter=',')
 
+    # generate nonlinear data
     if args.data_type == 'homo_ev_nonlinear':
         X = ut.simulate_nonlinear_sem(W_true, n, sem_type)
         np.savetxt(f"/X_{args.data_type}.csv", X, delimiter=',')

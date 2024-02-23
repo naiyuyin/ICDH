@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from notears.nonlinear import notears_nonlinear
 from notears.nonlinear import NotearsMLP
-from Nonlinear_update import MLP
-from Nonlinear_update import Nonlinear_update
+from ICDH import MLP
+from ICDH import Nonlinear_update
 import utils as ut
 import time as t
 import argparse
