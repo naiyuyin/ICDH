@@ -31,7 +31,7 @@ $ cd ICDH
 $ python data_generation.py --num_size 5 --s0 2 --sem mlp --graph_type ER --sample_size 1000 --data_type hetero
 ```
 ## Example script for running the algorithm.
-After running the above script to generate nonlinear hetero data, one can try our ICDH algorithm by running the following example script:\
+After running the above script to generate nonlinear hetero data, one can try our ICDH algorithm by running the following example script:
 ```console
 $ python train.py --lamb1 0.01 --lamb2 0.01
 ```
