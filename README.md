@@ -8,8 +8,12 @@ Please cite our paper with:
 @inproceedings{yin2024effective,
   title={Effective Causal Discovery under Identifiable Heteroscedastic Noise Model},
   author={Yin, Naiyu and Gao, Tian and Yu, Yue and Ji, Qiang},
-  booktitle={AAAI Conference on Artificial Intelligence},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={38},
+  number={15},
+  pages={16486--16494},
   year={2024}
+}
 ```
 
 
